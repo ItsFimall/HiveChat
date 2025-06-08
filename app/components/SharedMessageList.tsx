@@ -12,8 +12,8 @@ export const SharedMessageList = (props: { chat_id: string }) => {
   const [isLoading, setIsLoading] = useState(true);    
   const [error, setError] = useState<string | null>(null);    
   
-  // 转换函数：将 null 值转换为 undefined  
-  const convertNullToUndefined = (obj: any): ChatType => {  
+  // 转换聊天对象：将 null 值转换为 undefined  
+  const convertChatNullToUndefined = (obj: any): ChatType => {  
     const converted = { ...obj };  
     Object.keys(converted).forEach(key => {  
       if (converted[key] === null) {  
@@ -21,6 +21,17 @@ export const SharedMessageList = (props: { chat_id: string }) => {
       }  
     });  
     return converted;  
+  };  
+  
+  // 转换消息数组：将 null 值转换为合适的默认值  
+  const convertMessagesNullToUndefined = (messages: any[]): Message[] => {  
+    return messages.map(msg => ({  
+      ...msg,  
+      content: msg.content ?? '', // 将 null 转换为空字符串  
+      reasoninContent: msg.reasoninContent ?? undefined,  
+      // 转换其他可能为 null 的字段  
+      deleteAt: msg.deleteAt ?? undefined,  
+    }));  
   };  
     
   useEffect(() => {    
@@ -33,13 +44,14 @@ export const SharedMessageList = (props: { chat_id: string }) => {
           return;    
         }    
             
-        // 使用转换函数处理数据库返回的数据  
-        setChat(convertNullToUndefined(chatResult.data));    
+        // 使用转换函数处理数据库返回的聊天数据  
+        setChat(convertChatNullToUndefined(chatResult.data));    
             
         // 获取消息列表    
         const messagesResult = await getMessagesInServer(props.chat_id);    
         if (messagesResult.status === 'success') {    
-          setMessageList(messagesResult.data || []);    
+          // 使用转换函数处理数据库返回的消息数据  
+          setMessageList(convertMessagesNullToUndefined(messagesResult.data || []));    
         }    
       } catch (err) {    
         setError('加载失败');    
