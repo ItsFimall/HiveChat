@@ -175,6 +175,11 @@ const ChatList = () => {
   // 常规聊天的菜单项
   const getStandardMenuItems = (isStar: boolean): MenuProps['items'] => {
     return [
+      {  
+        key: 'share',  
+        label: isShared ? '关闭分享' : '开启分享',  
+        icon: <ShareAltOutlined />,  
+      },
       {
         label: t('rename'),
         icon: <EditOutlined />,
