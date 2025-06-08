@@ -156,6 +156,7 @@ export const updateChatInServer = async (chatId: string, newChatInfo: {
   historyType?: 'all' | 'none' | 'count';
   historyCount?: number;
   isStar?: boolean;
+  isShared?: boolean;
   isWithBot?: boolean;
   botId?: number;
   avatar?: string;
