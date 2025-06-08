@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';  
 import { getSharedChatInServer } from '@/app/chat/actions/chat';  
 import { getMessagesInServer } from '@/app/chat/actions/message';  
-import { Message } from '@/types/llm';  
+import { Message, ChatType } from '@/types/llm';
   
 export const SharedMessageList = (props: { chat_id: string }) => {  
   const t = useTranslations('Chat');  
-  const [chat, setChat] = useState(null);  
+  const [chat, setChat] = useState<ChatType | null>(null);
   const [messageList, setMessageList] = useState<Message[]>([]);  
   const [isLoading, setIsLoading] = useState(true);  
   const [error, setError] = useState<string | null>(null);  
