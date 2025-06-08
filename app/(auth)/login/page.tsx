@@ -7,9 +7,6 @@ import Link from 'next/link';
 import { Form, Input, Button, Alert } from 'antd';
 import logo from "@/app/images/logo.png";
 import Hivechat from "@/app/images/hivechat.svg";
-import FeishuLogin from "@/app/components/FeishuLoginButton"
-import WecomLogin from "@/app/components/WecomLoginButton"
-import DingdingLogin from "@/app/components/DingdingLoginButton"
 import { fetchAppSettings } from '@/app/admin/system/actions';
 import { getActiveAuthProvides } from '@/app/(auth)/actions';
 import SpinLoading from '@/app/components/loading/SpinLoading';
