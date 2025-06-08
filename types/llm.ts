@@ -17,6 +17,7 @@ export type ChatType = {
   historyType?: 'all' | 'none' | 'count';
   historyCount?: number;
   isStar?: boolean;
+  isShared?: boolean;
   isWithBot?: boolean;
   botId?: number;
   avatar?: string;
