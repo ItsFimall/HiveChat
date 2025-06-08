@@ -13,13 +13,18 @@ const PreviewSidebar: React.FC = () => {
     content,
     contentType,
     activeTab,
+    width,
     setIsOpen,
     setActiveTab,
+    setWidth,
     resetActiveCard
   } = usePreviewSidebarStore();
   const [renderedContent, setRenderedContent] = useState<string>('');
   const [messageApi, contextHolder] = message.useMessage();
+  const [isDragging, setIsDragging] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const dragStartXRef = useRef<number>(0);
+  const dragStartWidthRef = useRef<number>(0);
 
   // 添加自适应 iframe 高度的函数，使用 useCallback 避免不必要的重新创建
   const resizeIframeToContent = useCallback(() => {
@@ -109,10 +114,10 @@ const PreviewSidebar: React.FC = () => {
 
   const handleDownload = () => {
     if (!content) return;
-    
+
     const fileType = contentType === 'svg' ? 'image/svg+xml' : 'text/html';
     const fileExt = contentType === 'svg' ? 'svg' : 'html';
-    
+
     const blob = new Blob([content], { type: fileType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -122,13 +127,13 @@ const PreviewSidebar: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     messageApi.success(`${contentType?.toUpperCase()} 已下载`);
   };
 
   const handleCopy = async () => {
     if (!content) return;
-    
+
     try {
       await navigator.clipboard.writeText(content);
       messageApi.success(`${contentType?.toUpperCase()} 代码已复制到剪贴板`);
@@ -137,6 +142,61 @@ const PreviewSidebar: React.FC = () => {
       console.error('复制失败:', err);
     }
   };
+
+  // 拖拽处理函数
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+    dragStartXRef.current = e.clientX;
+    dragStartWidthRef.current = width;
+
+    let animationFrameId: number | null = null;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 使用 requestAnimationFrame 来优化性能
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      animationFrameId = requestAnimationFrame(() => {
+        const deltaX = dragStartXRef.current - e.clientX; // 向左拖拽为正值
+        const newWidth = dragStartWidthRef.current + deltaX;
+        setWidth(newWidth);
+      });
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      setIsDragging(false);
+
+      // 取消待处理的动画帧
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      // 移除全局事件监听器
+      document.removeEventListener('mousemove', handleMouseMove, { capture: true });
+      document.removeEventListener('mouseup', handleMouseUp, { capture: true });
+
+      // 恢复默认样式
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    // 添加全局鼠标事件监听器，使用 capture 模式确保优先捕获
+    document.addEventListener('mousemove', handleMouseMove, { capture: true });
+    document.addEventListener('mouseup', handleMouseUp, { capture: true });
+
+    // 防止文本选择
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+  }, [width, setWidth]);
 
   // 根据内容类型确定语言
   const getLanguage = () => {
@@ -148,23 +208,40 @@ const PreviewSidebar: React.FC = () => {
       {contextHolder}
       <div
         className={clsx(
-          'fixed top-0 right-0 h-full bg-white border-l border-gray-200 shadow-lg z-40',
-          'transition-all duration-500 ease-in-out', // 增加过渡动画时间
+          'fixed top-0 right-0 h-full bg-white border-l border-gray-200 shadow-lg z-40 flex',
           {
-            'w-0 opacity-0 pointer-events-none translate-x-full': !isOpen, // 添加平移动画
-            'opacity-100 translate-x-0': isOpen, // 设置为主内容区域的 40%
+            'opacity-0 pointer-events-none translate-x-full': !isOpen,
+            'opacity-100 translate-x-0': isOpen,
           }
         )}
         style={{
-          // 计算宽度为主内容区域的 40%
-          width: isOpen ? 'calc(40% - 18px)' : '0',
-          // 固定在右侧
-          right: '0',
+          width: isOpen ? `${width}px` : '0',
+          transition: isDragging ? 'none' : 'all 0.3s ease-in-out',
         }}
       >
-        <div className="h-full flex flex-col">
-          <div className="flex justify-between items-center p-2 border-b">
-            <div className="flex-grow">
+        {/* 拖拽手柄 */}
+        {isOpen && (
+          <div
+            className={clsx(
+              'absolute left-0 top-0 w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-500 transition-colors duration-200',
+              'flex items-center justify-center group',
+              {
+                'bg-blue-500': isDragging,
+              }
+            )}
+            onMouseDown={handleMouseDown}
+            style={{ left: '-2px' }}
+          >
+            <div className="w-0.5 h-8 bg-gray-400 group-hover:bg-white transition-colors duration-200" />
+          </div>
+        )}
+        {/* 拖拽时的覆盖层，防止 iframe 捕获鼠标事件 */}
+        {isDragging && (
+          <div className="absolute inset-0 z-50 cursor-col-resize" />
+        )}
+        <div className="h-full flex flex-col flex-1">
+          <div className="flex justify-between items-center p-2 border-b min-w-0">
+            <div className="flex-shrink-0 mr-2">
               <Segmented
                 value={activeTab}
                 onChange={(value) => setActiveTab(value as 'code' | 'preview')}
@@ -182,7 +259,7 @@ const PreviewSidebar: React.FC = () => {
                 ]}
               />
             </div>
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-1 flex-shrink-0">
               <Button
                 type="text"
                 icon={<DownloadOutlined />}
@@ -194,6 +271,7 @@ const PreviewSidebar: React.FC = () => {
                 icon={<CopyOutlined />}
                 onClick={handleCopy}
                 aria-label={`复制 ${contentType?.toUpperCase()} 代码`}
+                size="small"
               >复制</Button>
               <Button
                 type="text"
@@ -226,10 +304,13 @@ const PreviewSidebar: React.FC = () => {
             ) : (
               <div className="h-full overflow-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                 <div className="p-4">
-                  <SyntaxHighlighter 
-                    language={getLanguage()} 
-                    style={tomorrow} 
-                    customStyle={{ backgroundColor: '#f9fafb', borderRadius: '0.375rem' }}
+                  <SyntaxHighlighter
+                    language={getLanguage()}
+                    style={tomorrow}
+                    customStyle={{
+                      backgroundColor: '#f9fafb',
+                      borderRadius: '0.375rem',
+                    }}
                     showLineNumbers={true}
                   >
                     {content || ''}
