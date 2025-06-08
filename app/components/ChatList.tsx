@@ -125,18 +125,44 @@ const ChatList = () => {
     }
   }
 
-  const handleChatAction = (action: string, chatId: string) => {
-    if (action === 'delete') {
-      deleteChat(chatId);
-    } else if (action === 'edit') {
-      const chat = chatList.find(c => c.id === chatId);
-      setNewChatName(chat?.title || '');
-      setRenameChatId(chatId);
-      setIsEditModalOpen(true);
-    } else if (action === 'top') {
-      const chat = chatList.find(c => c.id === chatId);
-      toggleStar(chatId, !chat?.isStar);
-    }
+  const handleChatAction = (action: string, chatId: string) => {  
+    if (action === 'delete') {  
+      deleteChat(chatId);  
+    } else if (action === 'edit') {  
+      const chat = chatList.find(c => c.id === chatId);  
+      setNewChatName(chat?.title || '');  
+      setRenameChatId(chatId);  
+      setIsEditModalOpen(true);  
+    } else if (action === 'top') {  
+      const chat = chatList.find(c => c.id === chatId);  
+      toggleStar(chatId, !chat?.isStar);  
+    } else if (action === 'share') {  
+      toggleChatShare(chatId);  
+    }  
+  };  
+  
+  const toggleChatShare = async (chatId: string) => {  
+    const chat = chatList.find(c => c.id === chatId);  
+    const newShareStatus = !chat?.isShared;  
+    
+    try {  
+      const result = await toggleChatShareInServer(chatId, newShareStatus);  
+      if (result.status === 'success') {  
+        // 更新本地状态  
+        updateChat(chatId, { isShared: newShareStatus });  
+        
+        if (newShareStatus) {  
+          // 复制分享链接到剪贴板  
+          const shareUrl = `${window.location.origin}/share/chat/${chatId}`;  
+          navigator.clipboard.writeText(shareUrl);  
+          message.success('分享链接已复制到剪贴板');  
+        } else {  
+          message.success('已关闭分享');  
+        }  
+      }  
+    } catch (error) {  
+      message.error('操作失败');  
+    }  
   };
 
   const handleSaveTitle = () => {
