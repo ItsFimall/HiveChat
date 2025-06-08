@@ -198,15 +198,6 @@ export default function SetupPage() {
           authProviders.includes('email') && authProviders.length > 1 && !session &&
           <div className="w-full text-center text-gray-500 text-sm">或</div>
         }
-        {
-          authProviders.includes('wecom') && !session && <div className='my-2'><WecomLogin text="使用企业微信登录后设置" callbackUrl="/setup" /></div>
-        }
-        {
-          authProviders.includes('feishu') && !session && <div className='my-2'><FeishuLogin text="使用飞书登录后设置" callbackUrl="/setup" /></div>
-        }
-        {
-          authProviders.includes('dingding') && !session && <div className='my-2'><DingdingLogin text="使用钉钉登录后设置" callbackUrl="/setup" /></div>
-        }
       </div>
     </div >
   );
