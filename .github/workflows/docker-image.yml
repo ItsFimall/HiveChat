@@ -1,14 +1,14 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Image to GHCR
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: '镜像版本号'
+        description: '镜像版本号 (Image Version)'
         required: false
         default: 'latest'
       environment:
-        description: '部署环境'
+        description: '部署环境 (Deployment Environment)'
         required: false
         default: 'production'
         type: choice
@@ -18,40 +18,47 @@ on:
         - development
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
-    
+    # 1. Add permissions for the GITHUB_TOKEN to write packages
+    permissions:
+      contents: read
+      packages: write
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
-      # 设置 QEMU 以支持多平台构建
+        
+      # No changes needed here
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-      
-      # 设置 Docker Buildx
+        
+      # No changes needed here
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
           driver-opts: |
             image=moby/buildkit:master
             network=host
-      
-      - name: Login to DockerHub
+            
+      # 2. Change Login action to use GitHub Container Registry
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      # 3. Change the image name to the GHCR format
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: hivenexus/hivechat
+          images: ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=${{ github.event.inputs.version || 'latest' }}
             type=raw,value=latest
-      
+            
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
