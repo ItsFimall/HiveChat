@@ -122,18 +122,6 @@ export default function LoginPage() {
             </Form>
           </>
         }
-        {
-          authProviders.includes('wecom') &&
-          <div className='my-2'><WecomLogin /></div>
-        }
-        {
-          authProviders.includes('feishu') &&
-          <div className='my-2'><FeishuLogin /></div>
-        }
-        {
-          authProviders.includes('dingding') &&
-          <div className='my-2'><DingdingLogin /></div>
-        }
       </div>
     </div>
   );
