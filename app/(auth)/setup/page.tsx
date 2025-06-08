@@ -8,9 +8,6 @@ import { adminSetup, adminSetupLogined, getActiveAuthProvides } from '../actions
 import { fetchAppSettings, } from '@/app/admin/system/actions';
 import { Form, Input, Button, Alert } from 'antd';
 import logo from "@/app/images/logo.png";
-import FeishuLogin from "@/app/components/FeishuLoginButton"
-import WecomLogin from "@/app/components/WecomLoginButton"
-import DingdingLogin from "@/app/components/DingdingLoginButton"
 import Hivechat from "@/app/images/hivechat.svg";
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
