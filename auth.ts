@@ -62,39 +62,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === "credentials" && token.sub) {
         token.provider = 'credentials';
       }
-      if (account?.provider === "feishu" && token.sub) {
-        const dbUser = await db.query.users.findFirst({
-          where: eq(users.feishuUserId, account.providerAccountId)
-        });
-
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.isAdmin = dbUser.isAdmin || false;
-        }
-        token.provider = 'feishu';
-      }
-      if (account?.provider === "wecom" && token.sub) {
-        const dbUser = await db.query.users.findFirst({
-          where: eq(users.wecomUserId, account.providerAccountId)
-        });
-
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.isAdmin = dbUser.isAdmin || false;
-        }
-        token.provider = 'wecom';
-      }
-      if (account?.provider === "dingding" && token.sub) {
-        const dbUser = await db.query.users.findFirst({
-          where: eq(users.dingdingUnionId, account.providerAccountId)
-        });
-
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.isAdmin = dbUser.isAdmin || false;
-        }
-        token.provider = 'dingding';
-      }
       return token;
     },
     async session({ session, token }) {
