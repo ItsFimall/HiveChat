@@ -169,6 +169,7 @@ export const chats = pgTable("chats", {
   defaultModel: varchar('default_model'),
   defaultProvider: varchar('default_provider'),
   isStar: boolean('is_star').default(false),
+  isShared: boolean('is_shared').default(false),
   isWithBot: boolean('is_with_bot').default(false),
   botId: integer('bot_id'),
   avatar: varchar('avatar'),
