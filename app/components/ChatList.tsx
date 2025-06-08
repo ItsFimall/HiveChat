@@ -173,7 +173,7 @@ const ChatList = () => {
   };
 
   // 常规聊天的菜单项
-  const getStandardMenuItems = (isStar: boolean): MenuProps['items'] => {
+  const getStandardMenuItems = (isStar: boolean, isShared?: boolean): MenuProps['items'] => {
     return [
       {  
         key: 'share',  
