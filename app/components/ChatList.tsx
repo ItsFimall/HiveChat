@@ -253,7 +253,7 @@ const ChatList = () => {
                       isHighlighted={highlightedChat === chat.id}
                       onOpenChange={handleOpenChange}
                       onAction={handleChatAction}
-                      menuItems={getStandardMenuItems(Boolean(chat.isStar))}
+                      menuItems={getStandardMenuItems(Boolean(chat.isStar), Boolean(chat.isShared))}
                       className="ml-5 pl-3"
                     >
                       <div className="whitespace-nowrap w-0 grow overflow-hidden text-ellipsis">
@@ -316,7 +316,7 @@ const ChatList = () => {
                   isHighlighted={highlightedChat === chat.id}
                   onOpenChange={handleOpenChange}
                   onAction={handleChatAction}
-                  menuItems={getBotActionItems(Boolean(chat.isStar))}
+                  menuItems={getStandardMenuItems(Boolean(chat.isStar), Boolean(chat.isShared))}
                   className="ml-0 pl-2"
                 >
                   <div style={{ width: '22px', height: '22px' }} className="flex items-center justify-center bg-slate-200 rounded-full">
