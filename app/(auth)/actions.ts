@@ -142,22 +142,13 @@ export async function adminSetupLogined(adminCode: string) {
   }
 }
 
-export async function getActiveAuthProvides() {
-  const activeAuthProvides = [];
-  // 兼容历史版本，只要没配置 OFF，就默认启用 Email 登录
-  if (!process.env.EMAIL_AUTH_STATUS || (process.env.EMAIL_AUTH_STATUS.toLowerCase() !== 'off')) {
-    activeAuthProvides.push('email')
-  }
-  if (process.env.FEISHU_AUTH_STATUS && process.env.FEISHU_AUTH_STATUS.toLowerCase() === 'on') {
-    activeAuthProvides.push('feishu')
-  }
-  if (process.env.WECOM_AUTH_STATUS && process.env.WECOM_AUTH_STATUS.toLowerCase() === 'on') {
-    activeAuthProvides.push('wecom')
-  }
-  if (process.env.DINGDING_AUTH_STATUS && process.env.DINGDING_AUTH_STATUS.toLowerCase() === 'on') {
-    activeAuthProvides.push('dingding')
-  }
-  return activeAuthProvides;
+export async function getActiveAuthProvides() {  
+  const activeAuthProvides = [];  
+  // 只保留邮箱登录  
+  if (!process.env.EMAIL_AUTH_STATUS || (process.env.EMAIL_AUTH_STATUS.toLowerCase() !== 'off')) {  
+    activeAuthProvides.push('email')  
+  }  
+  return activeAuthProvides;  
 }
 
 export async function getFeishuAuthInfo() {
