@@ -5,33 +5,8 @@ import { signInSchema } from "@/app/lib/zod";
 import { verifyPassword } from "@/app/utils/password";
 import { db } from '@/app/db';
 import { users } from '@/app/db/schema';
-import Feishu from "@/app/auth/providers/feishu";
-import Wecom from "@/app/auth/providers/wecom";
-import Dingding from "@/app/auth/providers/dingding";
 import { eq } from 'drizzle-orm';
 
-let authProviders: any[] = [];
-if (process.env.FEISHU_AUTH_STATUS === 'ON') {
-  const feishuAuth = Feishu({
-    clientId: process.env.FEISHU_CLIENT_ID!,
-    clientSecret: process.env.FEISHU_CLIENT_SECRET!,
-  });
-  authProviders.push(feishuAuth);
-}
-if (process.env.WECOM_AUTH_STATUS === 'ON') {
-  const wecomAuth = Wecom({
-    clientId: process.env.WECOM_CLIENT_ID!,
-    clientSecret: process.env.WECOM_CLIENT_SECRET!,
-  });
-  authProviders.push(wecomAuth);
-}
-if (process.env.DINGDING_AUTH_STATUS === 'ON') {
-  const dingdingAuth = Dingding({
-    clientId: process.env.DINGDING_CLIENT_ID!,
-    clientSecret: process.env.DINGDING_CLIENT_SECRET!,
-  });
-  authProviders.push(dingdingAuth);
-}
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     ...authProviders,
