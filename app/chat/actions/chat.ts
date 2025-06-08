@@ -94,6 +94,40 @@ export const getChatInfoInServer = async (chatId: string): Promise<{ status: str
   }
 }
 
+export const toggleChatShareInServer = async (chatId: string, isShared: boolean) => {  
+  const session = await auth();  
+  if (!session?.user.id) {  
+    return {  
+      status: 'fail',  
+      message: 'please login first.'  
+    }  
+  }  
+    
+  await db.update(chats)  
+    .set({ isShared: isShared })  
+    .where(and(  
+      eq(chats.id, chatId),  
+      eq(chats.userId, session.user.id)  
+    ));  
+      
+  return { status: 'success' };  
+}  
+  
+export const getSharedChatInServer = async (chatId: string) => {  
+  const result = await db.select()  
+    .from(chats)  
+    .where(and(  
+      eq(chats.id, chatId),  
+      eq(chats.isShared, true)  
+    ));  
+      
+  if (result.length > 0) {  
+    return { status: 'success', data: result[0] };  
+  } else {  
+    return { status: 'fail', data: null };  
+  }  
+}
+
 export const getChatListInServer = async () => {
   const session = await auth();
   if (!session?.user.id) {
