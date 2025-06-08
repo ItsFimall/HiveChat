@@ -18,7 +18,7 @@ import PlusIcon from "@/app/images/plus.svg";
 import Spark from "@/app/images/spark.svg";
 import useChatListStore from '@/app/store/chatList';
 import MenuSection from '@/app/components/SidebarMenuSection';
-import { getChatListInServer, deleteChatInServer, updateChatInServer } from '@/app/chat/actions/chat';
+import { getChatListInServer, deleteChatInServer, updateChatInServer, toggleChatShareInServer } from '@/app/chat/actions/chat';
 import { useTranslations } from 'next-intl';
 import useChatStore from '@/app/store/chat';
 import { useSession } from 'next-auth/react';
