@@ -248,6 +248,7 @@ CREATE TABLE public.chats (
     search_enabled boolean DEFAULT false,
     default_model character varying,
     default_provider character varying,
+    is_shared boolean DEFAULT false,
     is_star boolean DEFAULT false,
     is_with_bot boolean DEFAULT false,
     bot_id integer,
