@@ -1,7 +1,7 @@
 'use server';
 import { db } from '@/app/db';
 import { auth } from "@/auth";
-import { eq, and, desc, asc, inArray } from 'drizzle-orm';
+import { eq, and, desc, asc, inArray, update } from 'drizzle-orm';
 import { ChatType, MCPToolResponse } from '@/types/llm';
 import WebSearchService from '@/app/services/WebSearchService';
 import { chats, messages, appSettings, mcpServers, mcpTools, searchEngineConfig } from '@/app/db/schema';
