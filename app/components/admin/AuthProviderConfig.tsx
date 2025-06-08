@@ -7,9 +7,6 @@ import EmailSettingsModal from '@/app/components/admin/EmailSettingsModal'
 
 const AuthProviderConfig = () => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [isFeishuModalOpen, setIsFeishuModalOpen] = useState(false);
-  const [isWecomModalOpen, setIsWecomModalOpen] = useState(false);
-  const [isDingdingModalOpen, setIsDingdingModalOpen] = useState(false);
   const [authProviders, setAuthProviders] = useState<string[]>([]);
 
   useEffect(() => {
