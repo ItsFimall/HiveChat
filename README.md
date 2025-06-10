@@ -4,7 +4,8 @@
    <p>中文 ｜ <a href="https://github.com/ItsFimall/HiveChat/blob/main/README_EN.md">English</a><p>
    <a href="https://deepwiki.com/ItsFimall/HiveChat" target="_blank"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
    <p>专为小团队设计的 AI 聊天应用，支持 Deepseek、Open AI、Claude、Gemini 等模型。</p>
-   <p>相较 HiveNexus 原版，剔除了第三方登录等在小团队使用时不需要的部分。</p>
+   <p>相较 HiveNexus 原版，剔除了第三方登录。</p>
+   <p>相较 HiveNexus 原版，新增了分享功能。</p>
 </div>
 
 ## 1. 功能概览
