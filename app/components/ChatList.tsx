@@ -153,7 +153,7 @@ const ChatList = () => {
         
         if (newShareStatus) {  
           // 复制分享链接到剪贴板  
-          const shareUrl = `${window.location.origin}/share/chat/${chatId}`;  
+          const shareUrl = `${window.location.origin}/share/${chatId}`;  
           navigator.clipboard.writeText(shareUrl);  
           message.success('分享链接已复制到剪贴板');  
         } else {  
