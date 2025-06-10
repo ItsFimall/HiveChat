@@ -7,7 +7,7 @@ COPY package.json package-lock.json* ./
 
 RUN npm config set registry https://registry.npmmirror.com
 # 安装依赖
-RUN npm ci --production --frozen-lockfile
+RUN npm ci
 
 # 构建阶段
 FROM node:22-alpine AS builder
