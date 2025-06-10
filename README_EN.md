@@ -1,181 +1,220 @@
-<div align="center">
-   <img width="32" height="32" src="https://jiantuku.oss-cn-beijing.aliyuncs.com/share/logo.png" />
-   <img height="32" alt="HiveChat" src="https://jiantuku.oss-cn-beijing.aliyuncs.com/share/hivechat.png" />
-  <p><a href="https://github.com/HiveNexus/HiveChat">中文</a> ｜ English<p>
-   <p>An AI chatbot designed specifically for small to medium-sized teams, supporting models such as Deepseek, OpenAI, Claude, and Gemini.</p>
-</div>
+HiveChat is an AI chat application designed specifically for small teams, offering support for a wide range of models including Deepseek, OpenAI, Claude, and Gemini. A key difference from the original HiveNexus is the removal of third-party login options, simplifying the authentication process. Additionally, HiveChat introduces a new sharing feature, enhancing collaboration within teams.
 
-## 1. Feature Overview
+1. Feature Overview
+One administrator configures, and the entire team can easily use various AI models.
 
-One-time configuration by the administrator, easy for the entire team to use various AI models.
+Supports email login configuration
 
-* LaTeX and Markdown rendering
-* DeepSeek thought chain visualization
-* Vision Recognition
-* AI agents
-* Cloud-based data storage
-* Supported large model providers:
-    * OpenAI
-    * Claude
-    * Gemini
-    * DeepSeek
-    * Moonshot
-    * Volcengine Ark
-    * Alibaba Bailian (Qwen)
-    * Baidu Qianfan
-    * Ollama
-    * SiliconFlow
+Supports user group management
 
-### Regular Users  
-Log in to your account to start chatting.
+Set different available models for grouped users
 
-![image](https://jiantuku.oss-cn-beijing.aliyuncs.com/share/003.png)
+Set separate monthly token limits for grouped users
 
-### Admin Dashboard  
-* Admins can configure AI model providers  
-* Users can be added manually, and account registration can be enabled or disabled, suitable for small teams in companies, schools, or organizations  
-* View and manage all users
+Supports MCP server configuration (SSE mode)
 
-![image](https://jiantuku.oss-cn-beijing.aliyuncs.com/share/001.png)
+DeepSeek chain-of-thought display
 
-<details>
-  <summary>More Screenshot</summary>
-   Users
-   <img src="https://jiantuku.oss-cn-beijing.aliyuncs.com/share/002.png" />
-   Enable or disable user registration.
-   <img src="https://jiantuku.oss-cn-beijing.aliyuncs.com/share/004.png" />
-</details>
+LaTeX and Markdown rendering
 
-## 2. Online Demo
+Image understanding
 
-Note: The following is a demo site, and data may be cleared at any time.
+AI agents
 
-* **User Portal**：https://chat.yotuku.cn/
-    * You can register an account to try it out.
-* **Admin Portal**：https://hivechat-demo.vercel.app/
-    * Email: admin@demo.com
-    * Password: helloHivechat
+Cloud data storage
 
-## 3. Tech stack
+Supported large model service providers:
 
-* Next.js
-* Tailwindcss
-* Auth.js
-* PostgreSQL
-* Drizzle ORM
-* Ant Design
+OpenAI
 
-## 4. Installation and Deployment
-### Method 1: Local Deployment
-1. Clone this project to local.
-```
+Claude
+
+Gemini
+
+DeepSeek
+
+Moonshot
+
+Volcano Ark (Doubao)
+
+Ali Bailian (Qianwen)
+
+Baidu Qianfan
+
+Tencent Hunyuan
+
+Zhipu
+
+Open Router
+
+Grok
+
+Ollama
+
+Aibee Flow
+
+Also supports custom addition of any OpenAI-style service provider
+
+Regular User Interface
+Log in to your account and start chatting.
+
+MCP Usage
+
+Admin Backend
+Administrator configures AI large model service providers
+
+Can manually add users, and enable or disable account registration, suitable for small teams in companies/schools/organizations.
+
+View and manage all users.
+
+3. Technology Stack
+Next.js
+
+TailwindCSS
+
+Auth.js
+
+PostgreSQL
+
+Drizzle ORM
+
+Ant Design
+
+4. Installation and Deployment
+Method 1: Local Deployment
+Note:
+Upgrading from older versions might involve database structure changes. Please manually execute npm run initdb to update. Even if there are no updates, there are no side effects.
+
+Clone this project locally
+
 git clone https://github.com/HiveNexus/hivechat.git
-```
 
-2. Install the dependencies
 
-```shell
+Install dependencies
+
 cd hivechat
 npm install
-```
 
-3. Modify the local configuration file
 
-Copy the sample .env file to `.env`
-```shell
+Modify local configuration file
+
+Copy the example file to .env
+
 cp .env.example .env
-```
 
-Edit the .env file.
 
-```env
-# PostgreSQL Database Connection URL. This is an example; you need to install PostgreSQL locally or connect to a remote PostgreSQL instance.
-# Note: Local installations do not currently support Serverless PostgreSQL provided by Vercel or Neon.
+Modify the .env file
+
+# PostgreSQL database connection URL, this is an example, you need to install locally or connect to a remote PostgreSQL
+# Note that local installation currently does not support Serverless PostgreSQL provided by Vercel or Neon.
 DATABASE_URL=postgres://postgres:password@localhost/hivechat
 
-# Used for encrypting sensitive information such as user data. You can generate a random 32-character string as a key using the command `openssl rand -base64 32`. This is an example; please replace it with the value you generate.
+# Used for encrypting sensitive information such as user information. You can use openssl rand -base64 32 to generate a random 32-bit string as the key. This is an example, please replace it with your own generated value.
 AUTH_SECRET=hclqD3nBpMphLevxGWsUnGU6BaEa2TjrCQ77weOVpPg=
 
-# Admin authorization code. After initialization, use this value to set up the admin account. This is an example; please replace it with the value you generate.
+# Administrator authorization code. After initialization, use this value to set up the administrator account. This is an example, please replace it with your own generated value.
 ADMIN_CODE=22113344
 
-# Set the production environment to the official domain. No changes are required for testing purposes.
+# Set to your official domain name in a production environment
 NEXTAUTH_URL=http://127.0.0.1:3000
-```
 
-4. Initialize the Database
-```shell
+# Whether to enable email login. Set to ON to enable, OFF to disable. If not set, it defaults to ON.
+EMAIL_AUTH_STATUS=ON
+
+
+Initialize database
+
 npm run initdb
-```
-5. Start the Application
 
-```
-// Development mode
+
+Start the program
+
+// For testing/development
 npm run dev
-// Production mode
+// For official start
 npm run build
-npm run start  
-```
-6. Initialize the Admin Account
+npm run start
 
-Visit `http://localhost:3000/setup` (use the actual domain and port) to access the admin account setup page. Once set up, you can use the system normally.
 
-### Method 2: Docker Deployment
-1. Clone this project to your local machine
-```
+Initialize administrator account
+
+Visit http://localhost:3000/setup (using your actual domain name and port number) to enter the administrator account setup page. After setup, you can use the system normally.
+
+Method 2: Docker Deployment
+Due to frequent recent updates, an SQL script for upgrading the database with Docker is not yet provided. If you are upgrading from a historical version and are using it for testing purposes, you can directly delete hivechat_postgres_data under the storage volume; the database will automatically reinitialize. If you have an upgrade requirement for a production Docker environment, please contact the author. Other deployment methods do not have this issue.
+
+Clone this project locally
+
 git clone https://github.com/HiveNexus/hivechat.git
-```
 
-2. Modify the local configuration file
 
-Copy the example file to `.env`
-```shell
+Modify local configuration file
+
+Copy the example file to .env
+
 cp .env.example .env
-```
-Modify `AUTH_SECRET` and `ADMIN_CODE` as needed. Be sure to reset these for production environments; no changes are needed for testing.
-
-3. Build the Docker image
-```
-docker compose build
-```
-5. Start the container
-```   
-docker compose up -d
-```
-
-6. Initialize the Admin Account
-   
-Visit `http://localhost:3000/setup` (use the actual domain and port) to access the admin account setup page. Once set up, you can use the system normally.
 
 
-### Method 3: Deploy on Vercel
-Click the button below to begin deployment.
+Configure the following items according to your actual situation:
+Modify AUTH_SECRET and ADMIN_CODE. It is essential to reset these in a production environment; you can leave them unchanged for testing purposes.
+Modify the .env file
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/HiveNexus/hivechat.git&project-name=hivechat&env=DATABASE_URL&env=AUTH_SECRET&env=ADMIN_CODE)
+# PostgreSQL database connection URL, can be left blank for Docker deployment
+DATABASE_URL=
 
-By default, the code is cloned to your own Github. Afterward, fill in the environment variables:
-
-<img width="726" alt="image" src="https://jiantuku.oss-cn-beijing.aliyuncs.com/share/vercel01.png" />
-
-```
-# PostgreSQL database connection URL. Vercel offers free hosting services. See further details below.
-DATABASE_URL=postgres://postgres:password@localhost/hivechat
-
-#Encryption key for sensitive information like user data. You can generate a random 32-character string using openssl rand -base64 32. This example key should be replaced with your generated value.
+# Used for encrypting sensitive information such as user information. You can use openssl rand -base64 32 to generate a random 32-bit string as the key. This is an example, please replace it with your own generated value. For testing purposes, you can leave it unchanged.
 AUTH_SECRET=hclqD3nBpMphLevxGWsUnGU6BaEa2TjrCQ77weOVpPg=
 
-# Admin authorization code. This value is used to set up the admin account. Replace this example with your generated value.
+# Administrator authorization code. After initialization, use this value to set up the administrator account. This is an example, please replace it with your own generated value.
 ADMIN_CODE=22113344
-```
-#### Appendix: Vercel (Neon) PostgreSQL Configuration
 
-1. In the Vercel dashboard, select the "Storage" tab and click "Create Database".
-2. Choose Neon (Serverless Postgres)
-<img width="400" alt="image" src="https://jiantuku.oss-cn-beijing.aliyuncs.com/share/vercel02.png" />
+# Set to your official domain name in a production environment; used for callbacks when enabling Feishu and other third-party logins.
+NEXTAUTH_URL=http://127.0.0.1:3000
 
-3. Follow the instructions to complete the setup, then copy the `DATABASE_URL` value from this step and paste it into the `DATABASE_URL` from the previous section.
-<img width="800" alt="image" src="https://jiantuku.oss-cn-beijing.aliyuncs.com/share/vercel03.png" />
+# Whether to enable email login. Set to ON to enable, OFF to disable. If not set, it defaults to ON.
+EMAIL_AUTH_STATUS=ON
 
-4. Initialize the Admin Account
 
-Once the installation and deployment are complete using the above method, visit `http://localhost:3000/setup` (use the actual domain and port) to access the admin account setup page. Once set up, you can use the system normally.
+Start the container
+
+docker compose up -d
+
+
+Initialize administrator account
+
+Visit http://localhost:3000/setup (using your actual domain name and port number) to enter the administrator account setup page. After setup, you can use the system normally.
+
+Method 3: Deploy on Vercel
+Note:
+If you are upgrading from an older version to a version updated after April 5, 2025, and encounter a stuck upgrade, please manually log into the Vercel database management page and change the daily_token_limit field under the group table to monthly_token_limit, then redeploy. Because it involves table structure adjustments, the script execution cannot automatically confirm or skip, which may cause deployment to get stuck. This problem does not exist for fresh deployments. See here for details.
+
+Click the button below to start deployment.
+
+After cloning the code to your GitHub by default, you need to fill in the environment variables:
+
+# PostgreSQL database connection URL. The Vercel platform provides a free hosting service. See the explanation below for details.
+DATABASE_URL=postgres://postgres:password@localhost/hivechat
+
+# Used for encrypting sensitive information such as user information. You can use openssl rand -base64 32 to generate a random 32-bit string as the key. This is an example, please replace it with your own generated value.
+AUTH_SECRET=hclqD3nBpMphLevxGWsUnGU6BaEa2TjrCQ77weOVpPg=
+
+# Administrator authorization code. After initialization, use this value to set up the administrator account. This is an example, please replace it with your own generated value.
+ADMIN_CODE=22113344
+
+# Set to your official domain name in a production environment
+NEXTAUTH_URL=https://hivechat-xxx.vercel.app
+
+# Whether to enable email login. Set to ON to enable, OFF to disable.
+EMAIL_AUTH_STATUS=ON
+
+
+Appendix 1: Vercel (Neon) PostgreSQL Configuration
+On the Vercel platform's top navigation, select the "Storage" tab, then click "Create Database".
+
+Select Neon (Serverless Postgres).
+
+After completing creation as guided, copy the DATABASE_URL value from here and paste it into the DATABASE_URL field in the previous step.
+
+Initialize administrator account
+
+After completing the installation and deployment using the methods above, visit http://localhost:3000/setup (using your actual domain name and port number) to enter the administrator account setup page. After setup, you can use the system normally.
