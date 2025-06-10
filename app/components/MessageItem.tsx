@@ -14,13 +14,16 @@ const MessageItem = memo((props: {
   isConsecutive: boolean;
   role: 'assistant' | 'user' | 'system',
   retryMessage: (index: number) => void,
-  deleteMessage: (index: number) => void
+  deleteMessage: (index: number) => void,
+  // 将 isReadOnly 改为 isSharedPage
+  isSharedPage?: boolean; 
 }
 ) => {
   const t = useTranslations('Chat');
   const { allProviderListByKey } = useModelListStore();
   const [images, setImages] = useState<string[]>([]);
   const [plainText, setPlainText] = useState('');
+  
   useEffect(() => {
     if (Array.isArray(props.item.content) && props.item.content.length > 0) {
       const images = props.item.content.filter((item: any) => item.type === 'image').map((item: any) => item.data);
@@ -46,114 +49,131 @@ const MessageItem = memo((props: {
     }
   }, [allProviderListByKey, props.item.providerId])
 
-  if (props.item.type === 'error' && props.item.errorType === 'TimeoutError') {
+  // 根据 isSharedPage 隐藏或显示操作按钮
+  const renderActions = (isUserMessage: boolean) => {
+    if (props.isSharedPage) { // 如果是分享页面，不渲染任何操作按钮
+      return null;
+    }
+
+    if (isUserMessage) {
+      return (
+        <div className='invisible flex flex-row-reverse pr-1 mt-1 group-hover:visible'>
+          <Tooltip title={t('delete')}>
+            <Popconfirm
+              title={t('deleteNotice')}
+              description={t('currentMessageDelete')}
+              onConfirm={() => props.deleteMessage(props.index)}
+              okText={t('confirm')}
+              cancelText={t('cancel')}
+              placement='bottom'
+            >
+              <Button type="text" size='small'>
+                <DeleteOutlined style={{ color: 'gray' }} />
+              </Button>
+            </Popconfirm>
+          </Tooltip>
+          <Tooltip title={t('retry')}>
+            <Button type="text" size='small'
+              onClick={() => {
+                props.retryMessage(props.index)
+              }}
+            >
+              <SyncOutlined style={{ color: 'gray' }} />
+            </Button>
+          </Tooltip>
+          <CopyToClipboard text={plainText} onCopy={() => {
+            message.success(t('copySuccess'));
+          }}>
+            <Tooltip title={t('copy')}>
+              <Button type="text" size='small'>
+                <CopyOutlined style={{ color: 'gray' }} />
+              </Button>
+            </Tooltip>
+          </CopyToClipboard>
+        </div>
+      );
+    } else { // Assistant message actions
+      return (
+        <div className='invisible flex flex-row items-center pl-1 group-hover:visible'>
+          <CopyToClipboard text={plainText} onCopy={() => {
+            message.success(t('copySuccess'));
+          }}>
+            <Tooltip title={t('copy')}>
+              <Button type="text" size='small'>
+                <CopyOutlined style={{ color: 'gray' }} />
+              </Button>
+            </Tooltip>
+          </CopyToClipboard>
+          <Tooltip title={t('retry')}>
+            <Button type="text" size='small'
+              onClick={() => {
+                props.retryMessage(props.index - 1)
+              }}
+            >
+              <SyncOutlined style={{ color: 'gray' }} />
+            </Button>
+          </Tooltip>
+          <Tooltip title={t('delete')}>
+            <Popconfirm
+              title={t('deleteNotice')}
+              description={t('currentMessageDelete')}
+              onConfirm={() => props.deleteMessage(props.index)}
+              okText={t('confirm')}
+              cancelText={t('cancel')}
+              placement='bottom'
+            >
+              <Button type="text" size='small'>
+                <DeleteOutlined style={{ color: 'gray' }} />
+              </Button>
+            </Popconfirm>
+          </Tooltip>
+          {props.item.totalTokens ? <>
+            <span className='text-xs text-gray-500 ml-2'>Tokens:{props.item.totalTokens?.toLocaleString()}</span>
+            <span className='text-xs text-gray-500 ml-2'>↑{props.item.inputTokens?.toLocaleString()}</span>
+            <span className='text-xs text-gray-500 ml-2'>↓{props.item.outputTokens?.toLocaleString()}</span>
+          </> :
+            <Tooltip title={t('unknownUsage')}>
+              <span className='text-xs text-gray-500 ml-2'>Tokens: - </span>
+            </Tooltip>
+          }
+        </div>
+      );
+    }
+  };
+
+  // 错误消息的渲染逻辑也需要检查并调整
+  if (props.item.type === 'error') {
     return (
       <div className="flex container mx-auto px-2 max-w-screen-md w-full flex-col justify-center items-center" >
         <div className='items-start flex  max-w-3xl text-justify w-full my-0 pt-0 pb-1 flex-row'>
           {ProviderAvatar}
-          <div className='flex flex-col w-0 grow group max-w-80'>
+          <div className='flex flex-col w-0 grow group max-w-80'> {/* 调整max-w根据错误类型 */}
             <Alert
               showIcon
               style={{ marginLeft: '0.75rem' }}
-              message={t('apiTimeout')}
+              message={
+                props.item.errorType === 'TimeoutError' ? t('apiTimeout') :
+                props.item.errorType === 'OverQuotaError' ? "超出本月使用限额。请次月再重试，或联系管理员增加额度。" :
+                props.item.errorType === 'InvalidAPIKeyError' ? t('apiKeyError') :
+                "发生未知错误" // 默认错误信息
+              }
               type="warning"
             />
-            <div className='invisible flex flex-row items-center ml-3 my-1 group-hover:visible'>
-              <Tooltip title={t('deleteNotice')}>
-                <Popconfirm
-                  title={t('deleteNotice')}
-                  description={t('currentMessageDelete')}
-                  onConfirm={() => props.deleteMessage(props.index)}
-                  okText={t('confirm')}
-                  cancelText={t('cancel')}
-                  placement='bottom'
-                >
-                  <Button type="text" size='small'>
-                    <DeleteOutlined style={{ color: 'gray' }} />
-                  </Button>
-                </Popconfirm>
-              </Tooltip>
-            </div>
+            {!props.isSharedPage && renderActions(false)} {/* 错误消息也禁用操作 */}
           </div>
         </div>
       </div>
-    )
+    );
   }
-  if (props.item.type === 'error' && props.item.errorType === 'OverQuotaError') {
-    return (
-      <div className="flex container mx-auto px-2 max-w-screen-md w-full flex-col justify-center items-center" >
-        <div className='items-start flex  max-w-3xl text-justify w-full my-0 pt-0 pb-1 flex-row'>
-          {ProviderAvatar}
-          <div className='flex flex-col w-0 grow group' style={{ maxWidth: '28rem' }}>
-            <Alert
-              showIcon
-              style={{ marginLeft: '0.75rem' }}
-              message="超出本月使用限额。请次月再重试，或联系管理员增加额度。"
-              type="warning"
-            />
-            <div className='invisible flex flex-row items-center ml-3 my-1 group-hover:visible'>
-              <Tooltip title={t('deleteNotice')}>
-                <Popconfirm
-                  title={t('deleteNotice')}
-                  description={t('currentMessageDelete')}
-                  onConfirm={() => props.deleteMessage(props.index)}
-                  okText={t('confirm')}
-                  cancelText={t('cancel')}
-                  placement='bottom'
-                >
-                  <Button type="text" size='small'>
-                    <DeleteOutlined style={{ color: 'gray' }} />
-                  </Button>
-                </Popconfirm>
-              </Tooltip>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-  if (props.item.type === 'error' && props.item.errorType === 'InvalidAPIKeyError') {
-    return (
-      <div className="flex container mx-auto px-2 max-w-screen-md w-full flex-col justify-center items-center" >
-        <div className='items-start flex  max-w-3xl text-justify w-full my-0 pt-0 pb-1 flex-row'>
-          {ProviderAvatar}
-          <div className='flex flex-col w-0 grow group max-w-96'>
-            <Alert
-              showIcon
-              style={{ marginLeft: '0.75rem' }}
-              message={t('apiKeyError')}
-              type="warning"
-            />
-            <div className='invisible flex flex-row items-center ml-3 my-1 group-hover:visible'>
-              <Tooltip title={t('deleteNotice')}>
-                <Popconfirm
-                  title={t('deleteNotice')}
-                  description={t('currentMessageDelete')}
-                  onConfirm={() => props.deleteMessage(props.index)}
-                  okText={t('confirm')}
-                  cancelText={t('cancel')}
-                  placement='bottom'
-                >
-                  <Button type="text" size='small'>
-                    <DeleteOutlined style={{ color: 'gray' }} />
-                  </Button>
-                </Popconfirm>
-              </Tooltip>
-            </div>
-          </div>
-        </div>
-      </div>);
-  }
+
+  // Break message
   if (props.item.type === 'break') {
     return <div className="flex container mx-auto px-2 max-w-screen-md w-full flex-col justify-center items-center" >
       <div className='items-start flex  max-w-3xl text-justify w-full my-0 pt-0 pb-1 flex-row'>
         <div className="relative w-full my-6">
-          {/* Horizontal lines */}
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
             <div className="w-full border-t border-gray-200"></div>
           </div>
-
-          {/* Text container */}
           <div className="relative flex justify-center">
             <span className="bg-white px-3 text-xs text-gray-400">{t('contextCleared')}</span>
           </div>
@@ -161,87 +181,57 @@ const MessageItem = memo((props: {
       </div>
     </div>
   }
+
   if (props.role === 'user') {
-    return <div className="flex container mx-auto pl-4 pr-2 max-w-screen-md w-full flex-col justify-center items-center" >
-      <div className='items-start flex max-w-3xl text-justify w-full my-0 pt-0 pb-1 flex-row-reverse'>
-        <div className='flex ml-10 flex-col items-end group'>
-          <div className='flex flex-row gap-2 mb-2'>
-            {images.length > 0 &&
-              images.map((image, index) => {
-                return (
-                  <div key={index} className="flex flex-wrap gap-4">
-                    <AntdImage alt=''
-                      className='block border h-full w-full rounded-md object-cover cursor-pointer'
-                      height={160}
-                      src={image}
-                      preview={{
-                        mask: false
-                      }}
-                    />
-                  </div>
-                );
-              })}
-          </div>
-          {typeof props.item.content === 'string' &&
-            <div
-              className='w-fit px-4 py-3 markdown-body !min-w-4 !bg-gray-100 text-base rounded-xl ml-10'
-              style={{ maxWidth: '44rem' }}
-            >
-              <MarkdownRender content={props.item.content} />
-            </div>}
-          {Array.isArray(props.item.content) &&
-            props.item.content.filter((i) => i.type === 'text').map((it) => it.text).join('') !== '' &&
-            <div
-              className='w-fit px-4 py-3 markdown-body !min-w-4 !bg-gray-100 text-base rounded-xl ml-10'
-              style={{ maxWidth: '44rem' }}
-            >
-              <MarkdownRender content={props.item.content.filter((i) => i.type === 'text').map((it) => it.text).join('')} />
-            </div>}
-          <div className='invisible flex flex-row-reverse pr-1 mt-1 group-hover:visible'>
-            <Tooltip title={t('delete')}>
-              <Popconfirm
-                title={t('deleteNotice')}
-                description={t('currentMessageDelete')}
-                onConfirm={() => props.deleteMessage(props.index)}
-                okText={t('confirm')}
-                cancelText={t('cancel')}
-                placement='bottom'
-              >
-                <Button type="text" size='small'>
-                  <DeleteOutlined style={{ color: 'gray' }} />
-                </Button>
-              </Popconfirm>
-            </Tooltip>
-            <Tooltip title={t('retry')}>
-              <Button type="text" size='small'
-                onClick={() => {
-                  props.retryMessage(props.index)
-                }}
-              >
-                <SyncOutlined style={{ color: 'gray' }} />
-              </Button>
-            </Tooltip>
-            <CopyToClipboard text={plainText} onCopy={() => {
-              message.success(t('copySuccess'));
-            }}>
-              <Tooltip title={t('copy')}>
-                <Button type="text" size='small'>
-                  <CopyOutlined style={{ color: 'gray' }} />
-                </Button>
-              </Tooltip>
-            </CopyToClipboard>
-          </div>
+    return (
+        <div className="flex container mx-auto pl-4 pr-2 max-w-screen-md w-full flex-col justify-center items-center" >
+            <div className='items-start flex max-w-3xl text-justify w-full my-0 pt-0 pb-1 flex-row-reverse'>
+                <div className='flex ml-10 flex-col items-end group'>
+                    <div className='flex flex-row gap-2 mb-2'>
+                        {images.length > 0 &&
+                            images.map((image, index) => (
+                                <div key={index} className="flex flex-wrap gap-4">
+                                    <AntdImage alt=''
+                                        className='block border h-full w-full rounded-md object-cover cursor-pointer'
+                                        height={160}
+                                        src={image}
+                                        preview={{
+                                            mask: false
+                                        }}
+                                    />
+                                </div>
+                            ))}
+                    </div>
+                    {typeof props.item.content === 'string' &&
+                        <div
+                            className='w-fit px-4 py-3 markdown-body !min-w-4 !bg-gray-100 text-base rounded-xl ml-10'
+                            style={{ maxWidth: '44rem' }}
+                        >
+                            <MarkdownRender content={props.item.content} />
+                        </div>}
+                    {Array.isArray(props.item.content) &&
+                        props.item.content.filter((i) => i.type === 'text').map((it) => it.text).join('') !== '' &&
+                        <div
+                            className='w-fit px-4 py-3 markdown-body !min-w-4 !bg-gray-100 text-base rounded-xl ml-10'
+                            style={{ maxWidth: '44rem' }}
+                        >
+                            <MarkdownRender content={props.item.content.filter((i) => i.type === 'text').map((it) => it.text).join('')} />
+                        </div>}
+                    {renderActions(true)} {/* 渲染用户消息的操作按钮 */}
+                </div>
+            </div>
         </div>
-      </div>
-    </div>;
+    );
   }
+
   if (props.role === 'assistant') {
     return (
       <div className="flex container mx-auto px-2 max-w-screen-md w-full flex-col justify-center items-center" >
         <div className='items-start flex max-w-3xl text-justify w-full my-0 pt-0 pb-1 flex-row'>
           <div className='flex flex-col h-full'>
             {ProviderAvatar}
-            {props.isConsecutive && <div className="flex justify-center h-0 grow">
+            {/* 只有在非共享页面且连续的助手消息才显示连接线 */}
+            {!props.isSharedPage && props.isConsecutive && <div className="flex justify-center h-0 grow">
               <div className="h-full border-l border-dashed border-gray-300 my-1"></div>
             </div>}
           </div>
@@ -318,7 +308,7 @@ const MessageItem = memo((props: {
                           transform: `rotate(-90deg)`,
                           transition: 'transform 0.2s ease'
                         }}
-                      />
+                    />
                     </summary>
                     <div className='p-4 pb-0 text-xs border-t'>
                       <span className='mb-2 font-medium'>{t('mcpInput')}</span>
@@ -330,49 +320,7 @@ const MessageItem = memo((props: {
                 })
               }
             </div>
-            <div className='invisible flex flex-row items-center pl-1 group-hover:visible'>
-              <CopyToClipboard text={plainText} onCopy={() => {
-                message.success(t('copySuccess'));
-              }}>
-                <Tooltip title={t('copy')}>
-                  <Button type="text" size='small'>
-                    <CopyOutlined style={{ color: 'gray' }} />
-                  </Button>
-                </Tooltip>
-              </CopyToClipboard>
-              <Tooltip title={t('retry')}>
-                <Button type="text" size='small'
-                  onClick={() => {
-                    props.retryMessage(props.index - 1)
-                  }}
-                >
-                  <SyncOutlined style={{ color: 'gray' }} />
-                </Button>
-              </Tooltip>
-              <Tooltip title={t('delete')}>
-                <Popconfirm
-                  title={t('deleteNotice')}
-                  description={t('currentMessageDelete')}
-                  onConfirm={() => props.deleteMessage(props.index)}
-                  okText={t('confirm')}
-                  cancelText={t('cancel')}
-                  placement='bottom'
-                >
-                  <Button type="text" size='small'>
-                    <DeleteOutlined style={{ color: 'gray' }} />
-                  </Button>
-                </Popconfirm>
-              </Tooltip>
-              {props.item.totalTokens ? <>
-                <span className='text-xs text-gray-500 ml-2'>Tokens:{props.item.totalTokens?.toLocaleString()}</span>
-                <span className='text-xs text-gray-500 ml-2'>↑{props.item.inputTokens?.toLocaleString()}</span>
-                <span className='text-xs text-gray-500 ml-2'>↓{props.item.outputTokens?.toLocaleString()}</span>
-              </> :
-                <Tooltip title={t('unknownUsage')}>
-                  <span className='text-xs text-gray-500 ml-2'>Tokens: - </span>
-                </Tooltip>
-              }
-            </div>
+            {renderActions(false)} {/* 渲染助手消息的操作按钮 */}
           </div>
         </div>
       </div>
@@ -381,4 +329,4 @@ const MessageItem = memo((props: {
 });
 
 MessageItem.displayName = 'MessageItem';
-export default MessageItem
+export default MessageItem;
