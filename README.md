@@ -142,7 +142,7 @@ npm run start
 
 ### 方法 2：Docker 部署
 
-由于近期更新频繁，暂未提供 Docker 升级数据库的 SQL 脚本，如果是历史版本升级，测试用途的用户可直接删除存储卷下的 `hivechat_postgres_data`，数据库会自动重新初始化。如果正式环境 Docker 部署有升级需求，可联系作者(wechat:wuhaoworld)。 其他部署方式没有此问题。
+由于近期更新频繁，暂未提供 Docker 升级数据库的 SQL 脚本，如果是历史版本升级，测试用途的用户可直接删除存储卷下的 `hivechat_postgres_data`，数据库会自动重新初始化。如果正式环境 Docker 部署有升级需求，可联系作者。 其他部署方式没有此问题。
 
 1. 克隆本项目到本地
 ```
