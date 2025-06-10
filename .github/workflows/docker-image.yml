@@ -1,26 +1,15 @@
-name: Build and Push Docker Image to GHCR
+name: Auto Build and Push Docker Image to GHCR on Push
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: '镜像版本号 (Image Version)'
-        required: false
-        default: 'latest'
-      environment:
-        description: '部署环境 (Deployment Environment)'
-        required: false
-        default: 'production'
-        type: choice
-        options:
-        - production
-        - staging
-        - development
+  # 当有代码 push 到仓库时自动触发此 workflow
+  push:
+    branches:
+      - main # 或者你的主分支名称，例如 master, develop 等
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    # 1. Add permissions for the GITHUB_TOKEN to write packages
+    # 添加 GITHUB_TOKEN 的权限以写入 packages
     permissions:
       contents: read
       packages: write
@@ -29,11 +18,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         
-      # No changes needed here
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
         
-      # No changes needed here
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
@@ -41,7 +28,7 @@ jobs:
             image=moby/buildkit:master
             network=host
             
-      # 2. Change Login action to use GitHub Container Registry
+      # 登录到 GitHub Container Registry
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -49,17 +36,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           
-      # 3. Change the image name to the GHCR format
-      - name: Extract metadata
+      # 提取元数据，生成镜像标签
+      - name: Extract metadata (tags)
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=${{ github.event.inputs.version || 'latest' }}
+            # 使用当前日期作为版本号 (YYMMDD 格式)
+            type=raw,value=${{ format('{0}{1}{2}', github.event.repository.pushed_at[2], github.event.repository.pushed_at[3], github.event.repository.pushed_at[4]) }}
+            # 也可以添加短 SHA 作为额外的标签，确保唯一性 (可选)
+            type=sha,format=short
+            # 始终使用 latest 标签指向最新的构建
             type=raw,value=latest
             
-      - name: Build and push
+      - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -69,5 +60,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ github.workflow }}-${{ github.ref }}
           cache-to: type=gha,mode=max,scope=${{ github.workflow }}-${{ github.ref }}
+          # 将 ENVIRONMENT 构建参数硬编码为 'production'
           build-args: |
-            ENVIRONMENT=${{ github.event.inputs.environment || 'production' }}
+            ENVIRONMENT=production
