@@ -35,6 +35,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ==== 新增步骤：获取当前日期作为版本标签 ====
+      - name: Get current date for version tag
+        id: date_tag_step
+        run: echo "DATE_TAG=$(date +'%y%m%d')" >> "$GITHUB_OUTPUT"
+      # ============================================
           
       # 提取元数据，生成镜像标签
       - name: Extract metadata (tags)
@@ -43,8 +49,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            # 使用当前日期作为版本号 (YYMMDD 格式)
-            type=raw,value=${{ format('{0}{1}{2}', github.event.repository.pushed_at[2], github.event.repository.pushed_at[3], github.event.repository.pushed_at[4]) }}
+            # 使用上一步获取到的日期标签
+            type=raw,value=${{ steps.date_tag_step.outputs.DATE_TAG }}
             # 也可以添加短 SHA 作为额外的标签，确保唯一性 (可选)
             type=sha,format=short
             # 始终使用 latest 标签指向最新的构建
