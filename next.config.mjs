@@ -4,6 +4,8 @@ const withNextIntl = createNextIntlPlugin();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  swcMinify: true, // 启用 SWC 压缩  
+  compress: true,  // 启用 gzip 压缩  
   experimental: {
     serverActions: {
       bodySizeLimit: '5mb',
