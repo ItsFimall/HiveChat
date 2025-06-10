@@ -10,6 +10,8 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '5mb',
     },
+    optimizeCss: true, // CSS 优化  
+    optimizePackageImports: ['antd', 'lodash'], // 包导入优化 
   },
   webpack(config) {
     // Grab the existing rule that handles SVG imports
