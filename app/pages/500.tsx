@@ -14,8 +14,9 @@ const Custom500: React.FC = () => {
         <p className="text-xl font-medium text-gray-800 dark:text-gray-200 mb-6">
           Server Error
         </p>
+        {/* Changed 'We're' to 'We&apos;re' to resolve the ESLint error */}
         <p className="text-gray-600 dark:text-gray-400">
-          We're sorry, but something went wrong on our server. Please try again later.
+          We&apos;re sorry, but something went wrong on our server. Please try again later.
         </p>
         <a
           href="/"
