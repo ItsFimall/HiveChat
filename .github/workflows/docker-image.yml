@@ -64,8 +64,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ github.workflow }}-${{ github.ref }}
-          cache-to: type=gha,mode=max,scope=${{ github.workflow }}-${{ github.ref }}
+          no-cache: true
           # 将 ENVIRONMENT 构建参数硬编码为 'production'
           build-args: |
             ENVIRONMENT=production
