@@ -10,7 +10,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '5mb',
     },
-    optimizeCss: true, // CSS 优化  
+    optimizeCss: false, // CSS 优化  
     optimizePackageImports: ['antd', 'lodash'], // 包导入优化 
   },
   webpack(config) {
