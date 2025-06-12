@@ -69,6 +69,7 @@ MCP 使用
    搜索设置
    <img src="https://jiantuku.oss-cn-beijing.aliyuncs.com/share/hivechat/08.png" />
 </details>
+
 ## 3. 技术栈
 
 * Next.js
@@ -194,7 +195,7 @@ docker compose up -d
 
 点击下面的按钮，即可开始部署。
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/HiveNexus/hivechat.git&project-name=hivechat&env=DATABASE_URL&env=AUTH_SECRET&env=ADMIN_CODE&env=EMAIL_AUTH_STATUS&env=FEISHU_AUTH_STATUS&env=FEISHU_CLIENT_ID&env=FEISHU_CLIENT_SECRET)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ItsFimall/hivechat.git&project-name=hivechat&env=DATABASE_URL&env=AUTH_SECRET&env=ADMIN_CODE&env=EMAIL_AUTH_STATUS)
 
 默认将代码克隆的自己的 Github 后，需要填写环境变量：
 
