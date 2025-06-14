@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, memo, useMemo } from 'react';
-import { Message } from '@/types/llm';
+import { Message, LLMModel, LLMModelProvider } from '@/types/llm'; // Import LLMModel and LLMModelProvider for types
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { Button, Tooltip, message, Alert, Avatar, Popconfirm, Image as AntdImage } from "antd";
 import { CopyOutlined, SyncOutlined, DeleteOutlined, DownOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined } from '@ant-design/icons';
@@ -21,7 +21,8 @@ const MessageItem = memo((props: {
   toggleGlobalModelName: () => void; // Prop from MessageList to toggle global visibility
 }) => {
   const t = useTranslations('Chat');
-  const { allProviderListByKey } = useModelListStore();
+  // Access both allProviderListByKey and modelListByKey
+  const { allProviderListByKey, modelListByKey } = useModelListStore();
   const [images, setImages] = useState<string[]>([]);
   const [plainText, setPlainText] = useState('');
 
@@ -29,25 +30,39 @@ const MessageItem = memo((props: {
   const { role, item, showGlobalModelName, toggleGlobalModelName } = props;
 
   useEffect(() => {
-    if (Array.isArray(props.item.content) && props.item.content.length > 0) {
-      const images = props.item.content.filter((item: any) => item.type === 'image').map((item: any) => item.data);
+    if (Array.isArray(item.content) && item.content.length > 0) {
+      const images = item.content.filter((contentItem: any) => contentItem.type === 'image').map((contentItem: any) => contentItem.data);
       setImages(images);
-      const plainText = props.item.content.filter((i) => i.type === 'text').map((it) => it.text).join('\n\n')
+      const plainText = item.content.filter((i) => i.type === 'text').map((it) => it.text).join('\n\n')
       setPlainText(plainText);
     } else {
-      setPlainText(props.item.content as string);
+      setPlainText(item.content as string);
     }
-  }, [props.item]);
+  }, [item]);
 
   const ProviderAvatar = useMemo(() => {
-    // Use destructured 'role' and 'item' directly here
-    if (role !== 'assistant' || !item.providerId) {
+    // Only render for assistant messages that have a providerId AND model (which is the model ID)
+    if (role !== 'assistant' || !item.providerId || !item.model) {
       return null;
     }
 
-    const provider = allProviderListByKey?.[item.providerId];
+    // Lookup the specific model using item.model
+    const specificModel: LLMModel | undefined = modelListByKey?.[item.model];
+    // Lookup the provider using item.providerId
+    const provider: LLMModelProvider | undefined = allProviderListByKey?.[item.providerId];
 
-    if (!provider) {
+    // Determine the name to display:
+    // 1. Specific model's displayName (e.g., "FimallAI 4o Mini")
+    // 2. Fallback to provider's name (e.g., "Open AI")
+    // 3. Fallback to "Bot" if neither is found
+    const nameToDisplay = specificModel?.displayName || provider?.providerName || 'Bot';
+
+    // Determine the logo:
+    // 1. Provider's logo (from allProviderListByKey)
+    const logoSrc = provider?.providerLogo;
+
+    // Fallback if neither specificModel nor provider info is found for basic avatar
+    if (!specificModel && !provider) {
       const handleClick = () => {
         if (toggleGlobalModelName) {
           toggleGlobalModelName();
@@ -55,7 +70,7 @@ const MessageItem = memo((props: {
       };
       return (
         <div onClick={handleClick} style={{ cursor: 'pointer' }} className='bg-blue-500 flex mt-1 text-cyan-50 items-center justify-center rounded-full w-8 h-8'>
-          Bot
+          AI
         </div>
       );
     }
@@ -68,25 +83,26 @@ const MessageItem = memo((props: {
 
     return (
       <div onClick={handleClick} style={{ cursor: 'pointer' }} className="flex flex-col items-center">
-        {(provider.providerLogo) ? (
+        {(logoSrc) ? ( // Use logoSrc
           <Avatar
             style={{ marginTop: '0.2rem', fontSize: '24px', border: '1px solid #eee', padding: '2px' }}
-            src={provider.providerLogo}
-            alt={provider.providerName || 'Provider Avatar'}
+            src={logoSrc}
+            alt={nameToDisplay + ' Avatar'} // Use combined name for alt text
           />
         ) : (
           <div className='bg-blue-500 flex mt-1 text-cyan-50 items-center justify-center rounded-full w-8 h-8'>
-            {provider.providerName?.charAt(0) || 'AI'}
+            {nameToDisplay.charAt(0) || 'AI'}
           </div>
         )}
         {showGlobalModelName && (
           <div className="text-xs text-gray-600 mt-1 whitespace-nowrap overflow-hidden text-ellipsis max-w-[60px]">
-            {provider.providerName}
+            {nameToDisplay}
           </div>
         )}
       </div>
     );
-  }, [allProviderListByKey, item.providerId, role, showGlobalModelName, toggleGlobalModelName]); // Dependencies now use destructured props
+    // Updated dependencies for useMemo: using item.model now
+  }, [allProviderListByKey, modelListByKey, item.providerId, item.model, role, showGlobalModelName, toggleGlobalModelName]);
 
   const renderActions = (isUserMessage: boolean) => {
     return (
