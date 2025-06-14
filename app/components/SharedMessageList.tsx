@@ -1,10 +1,10 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { getSharedChatInServer } from '@/app/chat/actions/chat';
 import { getMessagesInServer } from '@/app/chat/actions/message';
 import { Message, ChatType } from '@/types/llm';
-import MessageItem from '@/app/components/MessageItem';
+import MessageItem from '@/app/components/MessageItem'; // Make sure this path is correct
 
 export const SharedMessageList = (props: { chat_id: string }) => {
   const t = useTranslations('Chat');
@@ -12,6 +12,13 @@ export const SharedMessageList = (props: { chat_id: string }) => {
   const [messageList, setMessageList] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Add state for global model name visibility, mirroring MessageList
+  const [showAllModelNames, setShowAllModelNames] = useState(false);
+  // Function to toggle the global model name visibility
+  const toggleAllModelNames = useCallback(() => {
+    setShowAllModelNames(prev => !prev);
+  }, []);
 
   const convertChatNullToUndefined = (obj: any): ChatType => {
     const converted = { ...obj };
@@ -27,7 +34,7 @@ export const SharedMessageList = (props: { chat_id: string }) => {
     return messages.map(msg => ({
       ...msg,
       content: msg.content ?? '',
-      reasoninContent: msg.reasoninContent ?? undefined,
+      reasoninContent: msg.reasoninContent ?? undefined, // Typo: should be reasoningContent?
       deleteAt: msg.deleteAt ?? undefined,
     }));
   };
@@ -91,9 +98,12 @@ export const SharedMessageList = (props: { chat_id: string }) => {
               index={index}
               role={message.role as 'assistant' | 'user' | 'system'}
               isConsecutive={false}
-              retryMessage={() => {}}
-              deleteMessage={() => {}}
+              retryMessage={() => {}} // No retry in shared mode
+              deleteMessage={() => {}} // No delete in shared mode
               isSharedPage={true}
+              // THIS IS THE CRITICAL FIX: Pass the new props
+              showGlobalModelName={showAllModelNames}
+              toggleGlobalModelName={toggleAllModelNames}
             />
           ))}
         </div>
