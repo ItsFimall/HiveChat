@@ -1,5 +1,3 @@
-// app/store/modelList.ts
-
 import { create } from 'zustand';
 import { LLMModel, LLMModelProvider, LLMModelRealId, Message } from '@/types/llm';
 import { llmModelType } from '@/app/db/schema';
@@ -29,6 +27,7 @@ interface IModelListStore {
   deleteCustomModel: (modelId: string) => Promise<void>;
   setCurrentModel: (model: string) => void;
   setCurrentModelExact: (providerId: string, modelId: string,) => void;
+
   modelListByKey: { [key: string]: LLMModel } | null;
 }
 
@@ -52,8 +51,7 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
   modelList: [],
   modelListRealId: [],
   isPending: true,
-  // FIX: Initialize modelListByKey here
-  modelListByKey: null, // <--- ADDED THIS LINE
+  modelListByKey: null, // Initialized here
 
   setIsPending: (isPending: boolean) => {
     set((state) => ({
@@ -127,10 +125,10 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
       id: model.id,
       name: model.name,
       displayName: model.displayName,
-      apiUrl: model.apiUrl || undefined,
+      // Removed 'apiUrl' as it does not exist on llmModelType
       maxTokens: model.maxTokens || undefined,
       supportVision: model.supportVision || undefined,
-      selected: model.selected || false,
+      selected: model.selected || false, // supportTool might also be missing if not explicitly defined
       provider: {
         id: model.providerId,
         providerName: model.providerName,
