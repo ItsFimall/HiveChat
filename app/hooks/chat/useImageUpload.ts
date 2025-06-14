@@ -2,74 +2,92 @@ import { useState, useCallback } from 'react';
 import { message } from "antd";
 import { useTranslations } from 'next-intl';
 
+interface ImageData {
+  url: string;
+  file: File;
+}
+
 const useImageUpload = (maxImages: number = 5) => {
   const t = useTranslations('Chat');
-  const [uploadedImages, setUploadedImages] = useState<Array<{ url: string; file: File }>>([]);
+  const [uploadedImages, setUploadedImages] = useState<ImageData[]>([]);
+
+  const validateImage = useCallback((file: File): boolean => {
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+      message.warning(t('imageSizeLimit'));
+      return false;
+    }
+    if (!file.type.startsWith('image/')) {
+      message.warning(t('mustBeImage'));
+      return false;
+    }
+    return true;
+  }, [t]);
 
   const handleImageUpload = useCallback(async (file?: File, url?: string) => {
     if (file && url) {
-      // 直接处理传入的文件
-      if (file.size > 5 * 1024 * 1024) { // 5MB
-        message.warning(t('imageSizeLimit'));
-        return;
-      }
-      if (!file.type.startsWith('image/')) {
-        message.warning(t('mustBeImage'));
-        return;
-      }
-
+      if (!validateImage(file)) return;
       setUploadedImages(prev => [...prev, { url, file }]);
       return;
     }
 
-    // 原有的文件选择逻辑
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
     input.multiple = true;
+    input.hidden = true;
 
     input.onchange = async (e) => {
       const files = (e.target as HTMLInputElement).files;
-      if (!files) return;
-
-      const fileArray = Array.from(files);
-      if (fileArray.length + uploadedImages.length > maxImages) {
-        message.warning(t('maxImageCount', { maxImages: maxImages }));
+      if (!files || files.length === 0) {
+        input.remove();
         return;
       }
 
-      // 验证文件大小和类型
-      for (const file of fileArray) {
-        if (file.size > 5 * 1024 * 1024) { // 5MB
-          message.warning(t('imageSizeLimit'));
-          return;
-        }
-        if (!file.type.startsWith('image/')) {
-          message.warning(t('mustBeImage'));
-          return;
-        }
+      const totalFiles = files.length + uploadedImages.length;
+      if (totalFiles > maxImages) {
+        message.warning(t('maxImageCount', { maxImages }));
+        input.remove();
+        return;
       }
-      const newImages = fileArray.map(file => ({
+
+      const validFiles = Array.from(files).filter(validateImage);
+      if (validFiles.length === 0) {
+        input.remove();
+        return;
+      }
+
+      const newImages = validFiles.map(file => ({
         url: URL.createObjectURL(file),
         file
       }));
+
       setUploadedImages(prev => [...prev, ...newImages]);
+      input.remove();
     };
+
+    document.body.appendChild(input);
     input.click();
-  }, [uploadedImages.length, maxImages, t]);
+  }, [uploadedImages.length, maxImages, t, validateImage]);
 
   const removeImage = useCallback((index: number) => {
     setUploadedImages(prev => {
-      const imgToRemove = prev[index];
-      if (imgToRemove.url.startsWith('blob:')) {
-        URL.revokeObjectURL(imgToRemove.url);
+      const newImages = [...prev];
+      const [removed] = newImages.splice(index, 1);
+      if (removed?.url.startsWith('blob:')) {
+        URL.revokeObjectURL(removed.url);
       }
-      return prev.filter((_, i) => i !== index);
-      // return prev.filter((item) => item.url !== imgToRemove.url);
+      return newImages;
     });
   }, []);
 
-  return { uploadedImages, maxImages, handleImageUpload, removeImage, setUploadedImages };
+  return { 
+    uploadedImages,
+    maxImages, // Keeping this as requested
+    handleImageUpload, 
+    removeImage, 
+    setUploadedImages 
+  };
 };
 
 export default useImageUpload;
