@@ -4,7 +4,7 @@ import { Modal } from "antd";
 import { useRouter } from 'next/navigation';
 import ChatHeader from '@/app/components/ChatHeader';
 import ResponsingMessage from '@/app/components/ResponsingMessage';
-import MessageItem from '@/app/components/MessageItem';
+import MessageItem from '@/app/components/MessageItem'; // Make sure this path is correct
 import useChat from '@/app/hooks/chat/useChat';
 import { throttle } from 'lodash';
 import ScrollToBottomButton from '@/app/components/ScrollToBottomButton';
@@ -21,7 +21,14 @@ export const MessageList = (props: { chat_id: string }) => {
   const messageListRef = useRef<HTMLDivElement>(null);
   const [stableShowScrollButton, setStableShowScrollButton] = useState(false);
   const router = useRouter();
-  
+
+  // New state for global control of model name visibility
+  const [showAllModelNames, setShowAllModelNames] = useState(false);
+  // Function to toggle the global model name visibility
+  const toggleAllModelNames = useCallback(() => {
+    setShowAllModelNames(prev => !prev);
+  }, []);
+
   const {
     chat,
     messageList,
@@ -74,7 +81,7 @@ export const MessageList = (props: { chat_id: string }) => {
     try {
       const isNearBottom = chatElement.scrollHeight - chatElement.scrollTop <= chatElement.clientHeight + 20;
       setIsUserScrolling(!isNearBottom);
-      
+
       // Only update scroll button state when needed
       if (responseStatus !== 'pending' || isUserScrolling) {
         setStableShowScrollButton(!isNearBottom && chatElement.scrollHeight > chatElement.clientHeight + 50);
@@ -89,7 +96,7 @@ export const MessageList = (props: { chat_id: string }) => {
     () => throttle(handleScroll, 100, { leading: true, trailing: true }),
     [handleScroll]
   );
-  
+
   // Clean up throttle on unmount
   useEffect(() => {
     return () => {
@@ -102,24 +109,24 @@ export const MessageList = (props: { chat_id: string }) => {
     const checkInitialScrollState = () => {
       const chatElement = messageListRef.current;
       if (!chatElement) return;
-      
+
       try {
         // Use setTimeout to ensure DOM has updated
         setTimeout(() => {
           if (!messageListRef.current) return;
-          
+
           const isNearBottom = chatElement.scrollHeight - chatElement.scrollTop <= chatElement.clientHeight + 20;
           const shouldShowButton = !isNearBottom &&
             chatElement.scrollHeight > chatElement.clientHeight + 50 &&
             responseStatus !== 'pending';
-            
+
           setStableShowScrollButton(shouldShowButton);
         }, 100);
       } catch (error) {
         console.error('Initial scroll check error:', error);
       }
     };
-    
+
     requestAnimationFrame(checkInitialScrollState);
   }, [messageList, responseStatus]);
 
@@ -152,10 +159,12 @@ export const MessageList = (props: { chat_id: string }) => {
           index={index}
           retryMessage={retryMessage}
           deleteMessage={deleteMessage}
+          showGlobalModelName={showAllModelNames} // Pass the global state
+          toggleGlobalModelName={toggleAllModelNames} // Pass the global toggle function
         />
       );
     });
-  }, [messageList, responseStatus, retryMessage, deleteMessage]);
+  }, [messageList, responseStatus, retryMessage, deleteMessage, showAllModelNames, toggleAllModelNames]); // Add new dependencies
 
   // Navigate to new chat
   const handleNewChat = useCallback(() => {
@@ -190,7 +199,7 @@ export const MessageList = (props: { chat_id: string }) => {
           {responseStatus === 'done' && !isPending && <NewChatButton onClick={handleNewChat} />}
         </div>
       </div>
-      
+
       <ChatProvider
         chat_id={props.chat_id}
         responseStatus={responseStatus}
