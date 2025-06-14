@@ -31,8 +31,8 @@ interface IModelListStore {
 
 const useModelListStore = create<IModelListStore>((set, get) => ({
   currentModel: {
-    id: 'gpt-4o',
-    displayName: 'GPT 4o',
+    id: 'gpt-4o-mini',
+    displayName: 'FimallAI 4o Mini',
     supportVision: true,
     supportTool: true,
     maxTokens: 131072,
