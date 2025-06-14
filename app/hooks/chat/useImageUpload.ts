@@ -7,8 +7,8 @@ const useImageUpload = (maxImages: number = 5) => {
   const [uploadedImages, setUploadedImages] = useState<Array<{ url: string; file: File }>>([]);
 
   const handleImageUpload = useCallback(async (file?: File, url?: string) => {
+    // Direct handling for pre-existing file/url (e.g., from drag-and-drop or clipboard)
     if (file && url) {
-      // 直接处理传入的文件
       if (file.size > 5 * 1024 * 1024) { // 5MB
         message.warning(t('imageSizeLimit'));
         return;
@@ -18,11 +18,18 @@ const useImageUpload = (maxImages: number = 5) => {
         return;
       }
 
-      setUploadedImages(prev => [...prev, { url, file }]);
+      setUploadedImages(prev => {
+        // Check if adding this image exceeds maxImages before updating
+        if (prev.length >= maxImages) {
+          message.warning(t('maxImageCount', { maxImages }));
+          return prev; // Do not update state if limit reached
+        }
+        return [...prev, { url, file }];
+      });
       return;
     }
 
-    // 原有的文件选择逻辑
+    // Original file selection logic via input element
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -33,41 +40,69 @@ const useImageUpload = (maxImages: number = 5) => {
       if (!files) return;
 
       const fileArray = Array.from(files);
-      if (fileArray.length + uploadedImages.length > maxImages) {
-        message.warning(t('maxImageCount', { maxImages: maxImages }));
-        return;
-      }
+      let newImages: { url: string; file: File }[] = [];
+      let hasError = false;
 
-      // 验证文件大小和类型
+      // First pass: Validate files and create URLs
       for (const file of fileArray) {
         if (file.size > 5 * 1024 * 1024) { // 5MB
           message.warning(t('imageSizeLimit'));
-          return;
+          hasError = true;
+          break; // Stop processing on first error
         }
         if (!file.type.startsWith('image/')) {
           message.warning(t('mustBeImage'));
-          return;
+          hasError = true;
+          break; // Stop processing on first error
         }
+        newImages.push({
+          url: URL.createObjectURL(file),
+          file
+        });
       }
-      const newImages = fileArray.map(file => ({
-        url: URL.createObjectURL(file),
-        file
-      }));
-      setUploadedImages(prev => [...prev, ...newImages]);
+
+      if (hasError) {
+        // Revoke URLs if an error occurred during processing to prevent memory leaks
+        newImages.forEach(img => URL.revokeObjectURL(img.url));
+        return;
+      }
+
+      // Second pass: Update state once after all validations and URL creations
+      setUploadedImages(prev => {
+        if (prev.length + newImages.length > maxImages) {
+          message.warning(t('maxImageCount', { maxImages }));
+          // Revoke URLs of new images if they push over the limit
+          newImages.forEach(img => URL.revokeObjectURL(img.url));
+          return prev; // Do not update state
+        }
+        return [...prev, ...newImages];
+      });
     };
     input.click();
-  }, [uploadedImages.length, maxImages, t]);
+  }, [maxImages, t]); // Removed uploadedImages.length from dependencies
 
   const removeImage = useCallback((index: number) => {
     setUploadedImages(prev => {
       const imgToRemove = prev[index];
-      if (imgToRemove.url.startsWith('blob:')) {
+      // Revoke object URL only if it was created by us (starts with 'blob:')
+      if (imgToRemove && imgToRemove.url.startsWith('blob:')) {
         URL.revokeObjectURL(imgToRemove.url);
       }
       return prev.filter((_, i) => i !== index);
-      // return prev.filter((item) => item.url !== imgToRemove.url);
     });
-  }, []);
+  }, []); // Dependencies are stable
+
+  // A cleanup useEffect to revoke all remaining object URLs when the component unmounts
+  // or maxImages changes, just in case
+  useEffect(() => {
+    return () => {
+      uploadedImages.forEach(img => {
+        if (img.url.startsWith('blob:')) {
+          URL.revokeObjectURL(img.url);
+        }
+      });
+    };
+  }, [uploadedImages]); // This effect depends on uploadedImages to clean up when they change
 
   return { uploadedImages, maxImages, handleImageUpload, removeImage, setUploadedImages };
 };
