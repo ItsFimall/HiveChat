@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { LLMModel, LLMModelProvider, LLMModelRealId, Message } from '@/types/llm';
-import { llmModelType } from '@/app/db/schema'; // Assuming this defines the shape of data from your DB
+import { llmModelType } from '@/app/db/schema';
 
 interface IModelListStore {
   currentModel: LLMModel;
@@ -29,8 +29,6 @@ interface IModelListStore {
   deleteCustomModel: (modelId: string) => Promise<void>;
   setCurrentModel: (model: string) => void;
   setCurrentModelExact: (providerId: string, modelId: string,) => void;
-
-  // NEW: Add a mapping for models by ID for quick lookup
   modelListByKey: { [key: string]: LLMModel } | null;
 }
 
@@ -45,7 +43,6 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
     provider: {
       id: 'openai',
       providerName: 'Open AI',
-      // providerLogo: '...', // If you have a default logo here, add it
     }
   },
   providerList: [],
@@ -53,8 +50,11 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
   allProviderListByKey: null,
   allProviderList: [],
   modelList: [],
-  modelListRealId: [], // Note: modelListRealId is not being used for model lookup in MessageItem, just modelList.
+  modelListRealId: [],
   isPending: true,
+  // FIX: Initialize modelListByKey here
+  modelListByKey: null, // <--- ADDED THIS LINE
+
   setIsPending: (isPending: boolean) => {
     set((state) => ({
       ...state,
@@ -76,12 +76,12 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
     set((state) => ({
       ...state,
       modelList: newOrderModels,
-      modelListByKey: modelByKey, // Ensure this is always updated
+      modelListByKey: modelByKey,
     }));
   },
   initModelList: (initModels: llmModelType[]) => {
     const newData: LLMModel[] = initModels.map((model) => ({
-      id: model.name, // The model's ID is 'name' from llmModelType
+      id: model.name,
       displayName: model.displayName,
       maxTokens: model.maxTokens || undefined,
       supportVision: model.supportVision || undefined,
@@ -91,7 +91,7 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
       provider: {
         id: model.providerId,
         providerName: model.providerName,
-        providerLogo: model.providerLogo, // Include providerLogo here if llmModelType provides it
+        providerLogo: model.providerLogo,
       }
     }));
 
@@ -110,7 +110,7 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
     );
 
     const modelByKey = newData.reduce<{ [key: string]: LLMModel }>((result, model) => {
-      result[model.id] = model; // Key by model.id
+      result[model.id] = model;
       return result;
     }, {});
 
@@ -118,13 +118,13 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
       ...state,
       providerList,
       modelList: newData,
-      modelListByKey: modelByKey, // Populate during initial load
+      modelListByKey: modelByKey,
     }));
 
   },
   initModelListRealId: async (initModels: llmModelType[]) => {
     const newData = initModels.map((model) => ({
-      id: model.id, // This is the real DB ID, not the model's public 'name'
+      id: model.id,
       name: model.name,
       displayName: model.displayName,
       apiUrl: model.apiUrl || undefined,
@@ -173,15 +173,13 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
   setCurrentModelExact: (providerId: string, modelId: string) => {
     set((state) => {
       if (!(state.currentModel.id === modelId && state.currentModel.provider.id === providerId)) {
-        // Use modelListByKey for lookup if available
         const modelInfo = get().modelListByKey?.[modelId];
-        if (modelInfo && modelInfo.provider.id === providerId) { // Confirm provider matches
+        if (modelInfo && modelInfo.provider.id === providerId) {
           return {
             ...state,
             currentModel: modelInfo,
           };
         } else {
-          // Fallback to find if modelListByKey isn't robust enough or on initial load
           const fallbackModelInfo = state.modelList.find(m => (m.id === modelId && m.provider.id === providerId));
           if (fallbackModelInfo) {
             return {
@@ -198,7 +196,6 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
   setCurrentModel: (modelId: string) => {
     set((state) => {
       if (state.currentModel?.id !== modelId) {
-        // Use modelListByKey for faster lookup
         const modelInfo = get().modelListByKey?.[modelId];
         if (modelInfo) {
           return {
@@ -206,7 +203,6 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
             currentModel: modelInfo,
           };
         } else {
-          // Fallback to find if modelListByKey isn't robust enough or on initial load
           const fallbackModelInfo = state.modelList.find(m => m.id === modelId);
           if (fallbackModelInfo) {
             return {
@@ -289,7 +285,7 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
       modelList: state.modelList.map((model) =>
         model.id === modelId ? { ...model, selected } : model
       ),
-      modelListByKey: state.modelListByKey ? { // Update modelListByKey as well
+      modelListByKey: state.modelListByKey ? {
         ...state.modelListByKey,
         [modelId]: { ...state.modelListByKey[modelId], selected }
       } : null,
@@ -299,7 +295,7 @@ const useModelListStore = create<IModelListStore>((set, get) => ({
     set((state) => {
       const newModelList = [...state.modelList, model];
       const newModelListByKey = {
-        ...(state.modelListByKey || {}), // Ensure it's not null before spreading
+        ...(state.modelListByKey || {}),
         [model.id]: model,
       };
       return {
