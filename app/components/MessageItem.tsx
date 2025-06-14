@@ -4,7 +4,7 @@ import { Message } from '@/types/llm';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { Button, Tooltip, message, Alert, Avatar, Popconfirm, Image as AntdImage } from "antd";
 import { CopyOutlined, SyncOutlined, DeleteOutlined, DownOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined } from '@ant-design/icons';
-import useModelListStore from '@/app/store/modelList'; // Corrected path based on your code: useModelListStore not useModelListStore
+import useModelListStore from '@/app/store/modelList';
 import ThinkingIcon from '@/app/images/thinking.svg';
 import MarkdownRender from '@/app/components/Markdown';
 import { useTranslations } from 'next-intl';
@@ -17,14 +17,16 @@ const MessageItem = memo((props: {
   retryMessage: (index: number) => void,
   deleteMessage: (index: number) => void,
   isSharedPage?: boolean;
-  // NEW PROPS FOR GLOBAL MODEL NAME DISPLAY
-  showGlobalModelName: boolean;
-  toggleGlobalModelName: () => void;
+  showGlobalModelName: boolean; // Prop from MessageList to control global visibility
+  toggleGlobalModelName: () => void; // Prop from MessageList to toggle global visibility
 }) => {
   const t = useTranslations('Chat');
   const { allProviderListByKey } = useModelListStore();
   const [images, setImages] = useState<string[]>([]);
   const [plainText, setPlainText] = useState('');
+
+  // Destructure props used in useMemo to resolve the lint warning
+  const { role, item, showGlobalModelName, toggleGlobalModelName } = props;
 
   useEffect(() => {
     if (Array.isArray(props.item.content) && props.item.content.length > 0) {
@@ -38,18 +40,17 @@ const MessageItem = memo((props: {
   }, [props.item]);
 
   const ProviderAvatar = useMemo(() => {
-    // Only render for assistant messages that have a providerId
-    if (props.role !== 'assistant' || !props.item.providerId) {
-      return null; // Or a default placeholder if you want one for non-assistant roles
+    // Use destructured 'role' and 'item' directly here
+    if (role !== 'assistant' || !item.providerId) {
+      return null;
     }
 
-    const provider = allProviderListByKey?.[props.item.providerId];
+    const provider = allProviderListByKey?.[item.providerId];
 
-    // Fallback if provider info isn't found, but still allow click for toggling
     if (!provider) {
       const handleClick = () => {
-        if (props.toggleGlobalModelName) { // Check if prop exists before calling
-          props.toggleGlobalModelName();
+        if (toggleGlobalModelName) {
+          toggleGlobalModelName();
         }
       };
       return (
@@ -59,10 +60,9 @@ const MessageItem = memo((props: {
       );
     }
 
-    // Logic for displaying provider avatar and name
     const handleClick = () => {
-      if (props.toggleGlobalModelName) { // Check if prop exists before calling
-        props.toggleGlobalModelName();
+      if (toggleGlobalModelName) {
+        toggleGlobalModelName();
       }
     };
 
@@ -72,22 +72,21 @@ const MessageItem = memo((props: {
           <Avatar
             style={{ marginTop: '0.2rem', fontSize: '24px', border: '1px solid #eee', padding: '2px' }}
             src={provider.providerLogo}
-            alt={provider.providerName || 'Provider Avatar'} // Added alt text
+            alt={provider.providerName || 'Provider Avatar'}
           />
         ) : (
           <div className='bg-blue-500 flex mt-1 text-cyan-50 items-center justify-center rounded-full w-8 h-8'>
-            {provider.providerName?.charAt(0) || 'AI'} {/* Fallback for provider name initial */}
+            {provider.providerName?.charAt(0) || 'AI'}
           </div>
         )}
-        {/* Conditionally display model name based on global state */}
-        {props.showGlobalModelName && (
+        {showGlobalModelName && (
           <div className="text-xs text-gray-600 mt-1 whitespace-nowrap overflow-hidden text-ellipsis max-w-[60px]">
             {provider.providerName}
           </div>
         )}
       </div>
     );
-  }, [allProviderListByKey, props.item.providerId, props.role, props.showGlobalModelName, props.toggleGlobalModelName]); // Added new props to dependencies
+  }, [allProviderListByKey, item.providerId, role, showGlobalModelName, toggleGlobalModelName]); // Dependencies now use destructured props
 
   const renderActions = (isUserMessage: boolean) => {
     return (
@@ -137,7 +136,7 @@ const MessageItem = memo((props: {
     return (
       <div className="flex container mx-auto px-2 max-w-screen-md w-full flex-col justify-center items-center">
         <div className='items-start flex max-w-3xl text-justify w-full my-0 pt-0 pb-1 flex-row'>
-          {ProviderAvatar} {/* This will now include the click handler and name display */}
+          {ProviderAvatar}
           <div className='flex flex-col w-0 grow group max-w-80'>
             <Alert
               showIcon
@@ -210,8 +209,7 @@ const MessageItem = memo((props: {
       <div className="flex container mx-auto px-2 max-w-screen-md w-full flex-col justify-center items-center">
         <div className='items-start flex max-w-3xl text-justify w-full my-0 pt-0 pb-1 flex-row'>
           <div className='flex flex-col h-full'>
-            {ProviderAvatar} {/* This is where the ProviderAvatar is rendered */}
-            {/* The consecutive line logic */}
+            {ProviderAvatar}
             {!props.isSharedPage && props.isConsecutive && (
               <div className="flex justify-center h-0 grow">
                 <div className="h-full border-l border-dashed border-gray-300 my-1"></div>
