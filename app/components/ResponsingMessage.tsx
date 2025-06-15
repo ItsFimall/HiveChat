@@ -10,7 +10,7 @@ import useModelListStore from '@/app/store/modelList';
 import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
 
-// 优化的搜索状态指示器
+// Optimized search status indicator
 const SearchStatusIndicator = React.memo(({ status }: { status: 'none' | 'searching' | 'error' | 'done' }) => {
   if (status === 'none') return null;
 
@@ -32,7 +32,7 @@ const SearchStatusIndicator = React.memo(({ status }: { status: 'none' | 'search
 });
 SearchStatusIndicator.displayName = 'SearchStatusIndicator';
 
-// 优化的工具调用详情组件（添加平滑动画）
+// Optimized tool invocation details component
 const ToolInvocationDetails = React.memo(({
   mcp,
   isOpen,
@@ -94,6 +94,7 @@ const ResponsingMessage = (props: {
   const { allProviderListByKey } = useModelListStore();
   const [openToolIds, setOpenToolIds] = useState<Record<string, boolean>>({});
   const t = useTranslations('Chat');
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleToggle = useCallback((toolId: string) => {
     setOpenToolIds(prev => ({
@@ -105,37 +106,49 @@ const ResponsingMessage = (props: {
   const providerAvatar = useMemo(() => {
     if (allProviderListByKey && allProviderListByKey[props.currentProvider]?.providerLogo) {
       return (
-        <Avatar
-          className="mt-1 border border-solid border-gray-200 p-0.5"
-          src={allProviderListByKey[props.currentProvider].providerLogo}
-          style={{
-            transition: 'transform 0.3s ease',
-            ':hover': {
-              transform: 'scale(1.05)'
-            }
-          }}
-        />
+        <div 
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <Avatar
+            className="mt-1 border border-solid border-gray-200 p-0.5"
+            src={allProviderListByKey[props.currentProvider].providerLogo}
+            style={{
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+              transition: 'transform 0.3s ease',
+            }}
+          />
+        </div>
       );
     }
     return (
-      <div className="bg-blue-500 flex mt-1 text-cyan-50 items-center justify-center rounded-full w-8 h-8 transition-all duration-300 hover:scale-105">
+      <div 
+        className="bg-blue-500 flex mt-1 text-cyan-50 items-center justify-center rounded-full w-8 h-8"
+        style={{
+          transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+          transition: 'transform 0.3s ease',
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         {allProviderListByKey && allProviderListByKey[props.currentProvider]?.providerName?.charAt(0)}
       </div>
     );
-  }, [props.currentProvider, allProviderListByKey]);
+  }, [props.currentProvider, allProviderListByKey, isHovered]);
 
   if (props.responseStatus !== 'pending') return null;
 
-  // 流式内容渲染优化
   const renderContent = () => {
     if (typeof props.responseMessage.content === 'string') {
-      return <MarkdownRender 
-        content={props.responseMessage.content} 
-        className={clsx(
-          'opacity-0 animate-fadeInUp',
-          props.responseMessage.content.length > 0 && 'opacity-100'
-        )} 
-      />;
+      return (
+        <MarkdownRender 
+          content={props.responseMessage.content} 
+          className={clsx(
+            'opacity-0 animate-fadeInUp',
+            props.responseMessage.content.length > 0 && 'opacity-100'
+          )} 
+        />
+      );
     }
 
     if (Array.isArray(props.responseMessage.content)) {
@@ -216,7 +229,6 @@ const ResponsingMessage = (props: {
         </div>
       </div>
 
-      {/* 全局动画样式 */}
       <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; }
