@@ -10,7 +10,6 @@ import useModelListStore from '@/app/store/modelList';
 import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
 
-// Optimized search status indicator
 const SearchStatusIndicator = React.memo(({ status }: { status: 'none' | 'searching' | 'error' | 'done' }) => {
   if (status === 'none') return null;
 
@@ -32,7 +31,6 @@ const SearchStatusIndicator = React.memo(({ status }: { status: 'none' | 'search
 });
 SearchStatusIndicator.displayName = 'SearchStatusIndicator';
 
-// Optimized tool invocation details component
 const ToolInvocationDetails = React.memo(({
   mcp,
   isOpen,
@@ -141,20 +139,26 @@ const ResponsingMessage = (props: {
   const renderContent = () => {
     if (typeof props.responseMessage.content === 'string') {
       return (
-        <MarkdownRender 
-          content={props.responseMessage.content} 
-          className={clsx(
-            'opacity-0 animate-fadeInUp',
-            props.responseMessage.content.length > 0 && 'opacity-100'
-          )} 
-        />
+        <div className={clsx(
+          'opacity-0 animate-fadeInUp',
+          props.responseMessage.content.length > 0 && 'opacity-100'
+        )}>
+          <MarkdownRender content={props.responseMessage.content} />
+        </div>
       );
     }
 
     if (Array.isArray(props.responseMessage.content)) {
       return props.responseMessage.content.map((part, index) => (
         <div key={index} className="animate-fadeIn" style={{ animationDelay: `${index * 0.05}s` }}>
-          {part.type === 'text' && <MarkdownRender content={part.text} />}
+          {part.type === 'text' && (
+            <div className={clsx(
+              'opacity-0 animate-fadeInUp',
+              part.text?.length ? 'opacity-100' : ''
+            )}>
+              <MarkdownRender content={part.text || ''} />
+            </div>
+          )}
           {part.type === 'image' && (
             <AntdImage
               className="cursor-pointer transition-all duration-300 hover:shadow-md"
@@ -269,4 +273,4 @@ const ResponsingMessage = (props: {
   );
 };
 
-export default React.memo(ResponsingMessage);
+export default React.memo(ResponsingMessage); 
